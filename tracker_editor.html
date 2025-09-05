@@ -400,6 +400,13 @@
             <p>📁 Drag & drop your tracker_config.json file here, or</p>
             <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
             <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileSelect(event)">
+            
+            <div style="margin-top: 20px; text-align: left;">
+                <p style="margin-bottom: 10px;">📋 Or paste your JSON content directly:</p>
+                <textarea id="jsonPasteArea" placeholder="Paste your tracker_config.json content here..." 
+                          style="width: 100%; height: 200px; font-family: 'Courier New', monospace; font-size: 12px;"></textarea>
+                <button class="upload-btn" onclick="handleJSONPaste()" style="margin-top: 10px;">Load from Text</button>
+            </div>
         </div>
 
         <div class="status" id="status" style="display: none;"></div>
@@ -426,6 +433,12 @@
                     <button class="btn btn-secondary" onclick="downloadJSON()">📥 Download JSON</button>
                     <button class="btn" onclick="updateJSONPreview()">🔄 Load from Data</button>
                     <button class="btn" onclick="applyJSONChanges()">✅ Apply Changes</button>
+                    <div class="control-group" style="margin-left: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px; color: #e0e0e0;">
+                            <input type="checkbox" id="phoneModeToggle" onchange="updateJSONPreview()">
+                            <span>📱 Phone Mode</span>
+                        </label>
+                    </div>
                 </div>
                 <textarea class="json-preview" id="jsonPreview" style="font-family: 'Courier New', monospace; resize: vertical; min-height: 400px; width: 100%;"></textarea>
             </div>
@@ -487,6 +500,10 @@
                     <div class="form-group">
                         <label>Max Slippage (bps)</label>
                         <input type="number" id="maxSlippage" value="500" min="0" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Autosell Minutes (0 = disabled)</label>
+                        <input type="number" id="autosellMinutes" value="0" min="0" step="1" placeholder="Minutes after buy to auto-sell" title="Set to 0 to disable autosell, or any positive number of minutes">
                     </div>
                     <div class="form-group">
                         <label>Keywords (comma-separated)</label>
@@ -591,6 +608,33 @@
             reader.readAsText(file);
         }
         
+        // Handle JSON paste
+        function handleJSONPaste() {
+            const jsonText = document.getElementById('jsonPasteArea').value.trim();
+            
+            if (!jsonText) {
+                showStatus('Please paste JSON content in the text area', 'error');
+                return;
+            }
+            
+            try {
+                configData = JSON.parse(jsonText);
+                
+                if (!configData.users || typeof configData.users !== 'object') {
+                    throw new Error('Invalid JSON structure: missing users object');
+                }
+                
+                showStatus(`✅ Loaded configuration with ${Object.keys(configData.users).length} users`, 'success');
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                renderUsers();
+                updateJSONPreview();
+                
+            } catch (error) {
+                showStatus(`❌ Error parsing JSON: ${error.message}`, 'error');
+            }
+        }
+        
         // Show status message
         function showStatus(message, type = 'info') {
             const status = document.getElementById('status');
@@ -673,7 +717,7 @@
                                             </div>
                                         </h4>
                                         <div style="font-size: 12px; color: #ccc;">
-                                            <div>💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
+                                            <div>💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
                                             <div>📄 ${token.contract_address?.substring(0, 20)}...</div>
                                         </div>
                                         <div class="keywords" style="margin-bottom: 5px;">
@@ -749,6 +793,7 @@
             document.getElementById('contractAddress').value = token.contract_address || '';
             document.getElementById('buyAmount').value = token.buy_amount || 100;
             document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
+            document.getElementById('autosellMinutes').value = token.autosell_minutes || 0;
             document.getElementById('keywords').value = (token.keywords || []).join(', ');
             
             document.getElementById('tokenModal').style.display = 'block';
@@ -846,12 +891,32 @@
             if (!configData) return;
             
             const preview = document.getElementById('jsonPreview');
-            preview.value = JSON.stringify(configData, null, 2);
+            const phoneModeToggle = document.getElementById('phoneModeToggle');
+            const jsonContent = JSON.stringify(configData, null, 2);
+            
+            if (phoneModeToggle && phoneModeToggle.checked) {
+                preview.value = `cat > tracker_config.json << 'EOF'\n${jsonContent}\nEOF`;
+            } else {
+                preview.value = jsonContent;
+            }
         }
         
         function applyJSONChanges() {
             const preview = document.getElementById('jsonPreview');
-            const jsonText = preview.value;
+            let jsonText = preview.value;
+            
+            // If phone mode is enabled, extract JSON from cat command
+            const phoneModeToggle = document.getElementById('phoneModeToggle');
+            if (phoneModeToggle && phoneModeToggle.checked) {
+                // Extract JSON content between cat command and EOF
+                const match = jsonText.match(/cat > tracker_config\.json << 'EOF'\n([\s\S]*?)\nEOF/);
+                if (match) {
+                    jsonText = match[1];
+                } else {
+                    showStatus('❌ Invalid phone mode format', 'error');
+                    return;
+                }
+            }
             
             try {
                 const newConfigData = JSON.parse(jsonText);
@@ -934,6 +999,7 @@
             const contractAddress = document.getElementById('contractAddress').value;
             const buyAmount = parseFloat(document.getElementById('buyAmount').value);
             const maxSlippage = parseInt(document.getElementById('maxSlippage').value);
+            const autosellMinutes = parseInt(document.getElementById('autosellMinutes').value);
             const keywords = document.getElementById('keywords').value
                 .split(',')
                 .map(k => k.trim().toLowerCase())
@@ -954,6 +1020,7 @@
                 contract_address: contractAddress,
                 buy_amount: buyAmount,
                 max_slippage_bps: maxSlippage,
+                autosell_minutes: autosellMinutes,
                 keywords: keywords
             };
             
