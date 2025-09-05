@@ -400,6 +400,13 @@
             <p>📁 Drag & drop your tracker_config.json file here, or</p>
             <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
             <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileSelect(event)">
+            
+            <div style="margin-top: 20px; text-align: left;">
+                <p style="margin-bottom: 10px;">📋 Or paste your JSON content directly:</p>
+                <textarea id="jsonPasteArea" placeholder="Paste your tracker_config.json content here..." 
+                          style="width: 100%; height: 200px; font-family: 'Courier New', monospace; font-size: 12px;"></textarea>
+                <button class="upload-btn" onclick="handleJSONPaste()" style="margin-top: 10px;">Load from Text</button>
+            </div>
         </div>
 
         <div class="status" id="status" style="display: none;"></div>
@@ -589,6 +596,33 @@
             };
             
             reader.readAsText(file);
+        }
+        
+        // Handle JSON paste
+        function handleJSONPaste() {
+            const jsonText = document.getElementById('jsonPasteArea').value.trim();
+            
+            if (!jsonText) {
+                showStatus('Please paste JSON content in the text area', 'error');
+                return;
+            }
+            
+            try {
+                configData = JSON.parse(jsonText);
+                
+                if (!configData.users || typeof configData.users !== 'object') {
+                    throw new Error('Invalid JSON structure: missing users object');
+                }
+                
+                showStatus(`✅ Loaded configuration with ${Object.keys(configData.users).length} users`, 'success');
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                renderUsers();
+                updateJSONPreview();
+                
+            } catch (error) {
+                showStatus(`❌ Error parsing JSON: ${error.message}`, 'error');
+            }
         }
         
         // Show status message
