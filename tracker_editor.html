@@ -503,7 +503,7 @@
                     </div>
                     <div class="form-group">
                         <label>Autosell Minutes (0 = disabled)</label>
-                        <input type="number" id="autosellMinutes" value="0" min="0" step="1" placeholder="Minutes after buy to auto-sell" title="Set to 0 to disable autosell, or any positive number of minutes">
+                        <input type="number" id="autosellMinutes" value="0" min="0" step="1" placeholder="Minutes after buy to auto-sell" title="Set to 0 to disable autosell, or any positive number of minutes" required>
                     </div>
                     <div class="form-group">
                         <label>Keywords (comma-separated)</label>
@@ -793,7 +793,7 @@
             document.getElementById('contractAddress').value = token.contract_address || '';
             document.getElementById('buyAmount').value = token.buy_amount || 100;
             document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
-            document.getElementById('autosellMinutes').value = token.autosell_minutes || 0;
+            document.getElementById('autosellMinutes').value = (token.autosell_minutes !== null && token.autosell_minutes !== undefined && !isNaN(token.autosell_minutes)) ? token.autosell_minutes : 0;
             document.getElementById('keywords').value = (token.keywords || []).join(', ');
             
             document.getElementById('tokenModal').style.display = 'block';
@@ -999,7 +999,7 @@
             const contractAddress = document.getElementById('contractAddress').value;
             const buyAmount = parseFloat(document.getElementById('buyAmount').value);
             const maxSlippage = parseInt(document.getElementById('maxSlippage').value);
-            const autosellMinutes = parseInt(document.getElementById('autosellMinutes').value);
+            const autosellMinutes = parseInt(document.getElementById('autosellMinutes').value) || 0;
             const keywords = document.getElementById('keywords').value
                 .split(',')
                 .map(k => k.trim().toLowerCase())
@@ -1013,6 +1013,11 @@
                 // Rename token
                 configData.users[userId].tokens[tokenName] = configData.users[userId].tokens[editingToken];
                 delete configData.users[userId].tokens[editingToken];
+            }
+            
+            // Ensure autosell_minutes is always a valid number, never null
+            if (autosellMinutes === null || autosellMinutes === undefined || isNaN(autosellMinutes) || autosellMinutes < 0) {
+                autosellMinutes = 0;
             }
             
             configData.users[userId].tokens[tokenName] = {
