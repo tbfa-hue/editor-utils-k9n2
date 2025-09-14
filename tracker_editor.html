@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Tracker Config Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .upload-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px dashed #555;
+            text-align: center;
+        }
+
+        .upload-section.dragover {
+            border-color: #4CAF50;
+            background: #2d3d2d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn, .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        .upload-btn:hover, .btn:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #2d2d2d;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .tab {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .tab:hover {
+            background: #666;
+        }
+
+        .tab.active {
+            background: #4CAF50;
+        }
+
+        .tab-content {
+            background: #2d2d2d;
+            border-radius: 0 0 8px 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .controls {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select, input, textarea {
+            background: #1a1a1a;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .user-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #555;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .user-card:active {
+            cursor: grabbing;
+        }
+
+        .user-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            z-index: 1000;
+        }
+
+        .user-card.drag-over {
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .user-card h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-detail {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .user-detail strong {
+            color: #4CAF50;
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        .token-list {
+            margin-top: 15px;
+        }
+
+        .token-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 8px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+
+        .token-header:hover {
+            background: #333;
+        }
+
+        .token-toggle {
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .token-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .token-content {
+            display: none;
+            margin-top: 5px;
+        }
+
+        .token-content.expanded {
+            display: block;
+        }
+
+        .token-item {
+            background: #2d2d2d;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+
+        .token-item h4 {
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .keyword {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4CAF50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-direction: row;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            order: -1;
+        }
+
+        .modal .form-group label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+
+        .modal .form-group input[type="checkbox"] {
+            width: auto !important;
+            margin: 0 !important;
+        }
+
+        .status {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            color: #f44336;
+            background: #3d2d2d;
+            border-left: 4px solid #f44336;
+        }
+
+        .success {
+            color: #4CAF50;
+            background: #2d3d2d;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .json-preview {
+            background: #1a1a1a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre;
+        }
+
+        .discord-usernames {
+            background: #2a2a2a;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .discord-usernames h5 {
+            color: #2196F3;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .username-tag {
+            background: #2196F3;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 5px;
+            margin-bottom: 3px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Discord Tracker Config Editor</h1>
+            <p>Edit configuration for Discord-based Twitter monitoring</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <p>📁 Drag & drop your tracker_config.json file here, or</p>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+            <input type="file" id="fileInput" class="file-input" accept=".json" onchange="handleFileSelect(event)">
+            
+            <div style="margin-top: 20px; text-align: left;">
+                <p style="margin-bottom: 10px;">📋 Or paste your JSON content directly:</p>
+                <textarea id="jsonPasteArea" placeholder="Paste your tracker_config.json content here..." 
+                          style="width: 100%; height: 200px; font-family: 'Courier New', monospace; font-size: 12px;"></textarea>
+                <button class="upload-btn" onclick="handleJSONPaste()" style="margin-top: 10px;">Load from Text</button>
+            </div>
+        </div>
+
+        <div class="status" id="status" style="display: none;"></div>
+
+        <div id="mainContent" style="display: none;">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('users')">👥 Users</button>
+                <button class="tab" onclick="showTab('json')">📄 JSON</button>
+            </div>
+
+            <div id="usersTab" class="tab-content active">
+                <div class="controls">
+                    <button class="btn" onclick="showAddUserModal()">➕ Add User</button>
+                    <button class="btn btn-secondary" onclick="downloadJSON()">📥 Download JSON</button>
+                </div>
+                
+                <div id="userList" class="user-list">
+                    <!-- Users will be rendered here -->
+                </div>
+            </div>
+
+            <div id="jsonTab" class="tab-content">
+                <div class="controls">
+                    <button class="btn btn-secondary" onclick="downloadJSON()">📥 Download JSON</button>
+                    <button class="btn" onclick="updateJSONPreview()">🔄 Load from Data</button>
+                    <button class="btn" onclick="applyJSONChanges()">✅ Apply Changes</button>
+                    <div class="control-group" style="margin-left: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px; color: #e0e0e0;">
+                            <input type="checkbox" id="phoneModeToggle" onchange="updateJSONPreview()">
+                            <span>📱 Phone Mode</span>
+                        </label>
+                    </div>
+                </div>
+                <textarea class="json-preview" id="jsonPreview" style="font-family: 'Courier New', monospace; resize: vertical; min-height: 400px; width: 100%;"></textarea>
+            </div>
+        </div>
+
+        <!-- User Modal -->
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="userModalTitle">Add User</h2>
+                    <span class="close" onclick="closeUserModal()">&times;</span>
+                </div>
+                <form id="userForm">
+                    <div class="form-group">
+                        <label>Twitter Username</label>
+                        <input type="text" id="targetUsername" placeholder="e.g., CoinbaseAssets" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="activeToggle" checked>
+                            <span>Active</span>
+                        </label>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                        <button type="submit" class="btn">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Token Modal -->
+        <div id="tokenModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="tokenModalTitle">Add Token</h2>
+                    <span class="close" onclick="closeTokenModal()">&times;</span>
+                </div>
+                <form id="tokenForm">
+                    <input type="hidden" id="tokenUserId">
+                    <div class="form-group">
+                        <label>Token Name</label>
+                        <input type="text" id="tokenName" placeholder="e.g., TROLL, STARTUP" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="tokenActive" checked>
+                            <span>Active</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Contract Address</label>
+                        <input type="text" id="contractAddress" placeholder="Solana contract address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Buy Amount (USDC)</label>
+                        <input type="number" id="buyAmount" value="100" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Slippage (bps)</label>
+                        <input type="number" id="maxSlippage" value="500" min="0" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Autosell Minutes (0 = disabled)</label>
+                        <input type="number" id="autosellMinutes" value="0" min="0" step="1" placeholder="Minutes after buy to auto-sell" title="Set to 0 to disable autosell, or any positive number of minutes" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Keywords (comma-separated)</label>
+                        <textarea id="keywords" placeholder="troll, chaos, bridge, @StreamerSolana" rows="3"></textarea>
+                        <small style="color: #888; display: block; margin-top: 5px;">
+                            Regular keywords trigger on mentions. @usernames trigger when the tracked account follows that user.
+                        </small>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeTokenModal()">Cancel</button>
+                        <button type="submit" class="btn">Save Token</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Copy Token Modal -->
+        <div id="copyTokenModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="copyTokenModalTitle">Copy Token to Users</h2>
+                    <span class="close" onclick="closeCopyTokenModal()">&times;</span>
+                </div>
+                <div id="copyTokenContent">
+                    <div class="form-group">
+                        <p>Select users to copy this token to:</p>
+                    </div>
+                    <div id="userSelectionList">
+                        <!-- User checkboxes will be rendered here -->
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeCopyTokenModal()">Cancel</button>
+                        <button type="button" class="btn" onclick="executeCopyToken()">Copy Token</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let configData = null;
+        let editingUser = null;
+        let editingToken = null;
+        let copyingTokenData = null;
+        
+        // Initialize drag and drop
+        function initDragAndDrop() {
+            const uploadSection = document.getElementById('uploadSection');
+            
+            uploadSection.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadSection.classList.add('dragover');
+            });
+            
+            uploadSection.addEventListener('dragleave', () => {
+                uploadSection.classList.remove('dragover');
+            });
+            
+            uploadSection.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+        }
+        
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+        
+        // Handle file processing
+        function handleFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showStatus('Please select a JSON file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    configData = JSON.parse(e.target.result);
+                    
+                    if (!configData.users || typeof configData.users !== 'object') {
+                        throw new Error('Invalid JSON structure: missing users object');
+                    }
+                    
+                    showStatus(`✅ Loaded configuration with ${Object.keys(configData.users).length} users`, 'success');
+                    document.getElementById('uploadSection').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    renderUsers();
+                    updateJSONPreview();
+                    
+                } catch (error) {
+                    showStatus(`❌ Error parsing JSON: ${error.message}`, 'error');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Handle JSON paste
+        function handleJSONPaste() {
+            const jsonText = document.getElementById('jsonPasteArea').value.trim();
+            
+            if (!jsonText) {
+                showStatus('Please paste JSON content in the text area', 'error');
+                return;
+            }
+            
+            try {
+                configData = JSON.parse(jsonText);
+                
+                if (!configData.users || typeof configData.users !== 'object') {
+                    throw new Error('Invalid JSON structure: missing users object');
+                }
+                
+                showStatus(`✅ Loaded configuration with ${Object.keys(configData.users).length} users`, 'success');
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                renderUsers();
+                updateJSONPreview();
+                
+            } catch (error) {
+                showStatus(`❌ Error parsing JSON: ${error.message}`, 'error');
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Tab management
+        function showTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Refresh content if needed
+            if (tabName === 'users') {
+                renderUsers();
+            } else if (tabName === 'json') {
+                updateJSONPreview();
+            }
+        }
+        
+        // Render users
+        function renderUsers() {
+            if (!configData) return;
+
+            const userList = document.getElementById('userList');
+            const users = configData.users;
+
+            let html = '';
+            Object.keys(users).forEach((userId, index) => {
+                const user = users[userId];
+                const tokens = user.tokens || {};
+                
+                html += `
+                    <div class="user-card" draggable="true" data-user-id="${userId}" data-index="${index}">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                            👤 ${userId}
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <button class="btn btn-small" onclick="editUser('${userId}')">✏️</button>
+                                <button class="btn btn-small btn-danger" onclick="deleteUser('${userId}')">🗑️</button>
+                            </div>
+                        </h3>
+                        <div class="user-detail"><strong>Username:</strong> @${userId}</div>
+                        <div class="user-detail"><strong>Active:</strong> ${user.active ? 'Yes' : 'No'}</div>
+                        
+                        
+                        <div class="token-list">
+                            <div class="token-header" onclick="toggleTokens('${userId}')">
+                                <strong>🪙 Tokens (${Object.keys(tokens).length})</strong>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <button class="btn btn-small" onclick="event.stopPropagation(); addToken('${userId}')">➕</button>
+                                    <span class="token-toggle">▼</span>
+                                </div>
+                            </div>
+                            <div class="token-content" id="tokens-${userId}">
+                            ${Object.keys(tokens).map(tokenName => {
+                                const token = tokens[tokenName];
+                                return `
+                                    <div class="token-item" style="position: relative; padding-bottom: 35px;">
+                                        <h4>
+                                            ${tokenName}
+                                            <div style="float: right;">
+                                                <button class="btn btn-small" onclick="editToken('${userId}', '${tokenName}')">✏️</button>
+                                                <button class="btn btn-small btn-danger" onclick="deleteToken('${userId}', '${tokenName}')">🗑️</button>
+                                            </div>
+                                        </h4>
+                                        <div style="font-size: 12px; color: #ccc;">
+                                            <div>💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
+                                            <div>📄 ${token.contract_address?.substring(0, 20)}...</div>
+                                        </div>
+                                        <div class="keywords" style="margin-bottom: 5px;">
+                                            ${(token.keywords || []).map(keyword => 
+                                                `<span class="keyword" ${keyword.startsWith('@') ? 'style="background: #2196F3;"' : ''}>${keyword}</span>`
+                                            ).join('')}
+                                        </div>
+                                        <button class="btn btn-small btn-secondary" onclick="copyToken('${userId}', '${tokenName}')" title="Copy to other users" style="position: absolute; bottom: 5px; right: 5px;">📋</button>
+                                    </div>
+                                `;
+                            }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            userList.innerHTML = html;
+
+            // Add drag and drop event listeners to user cards
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragenter', handleDragEnter);
+                card.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+        
+        // User management
+        function showAddUserModal() {
+            editingUser = null;
+            document.getElementById('userModalTitle').textContent = 'Add User';
+            document.getElementById('userForm').reset();
+            document.getElementById('userModal').style.display = 'block';
+        }
+        
+        function editUser(userId) {
+            editingUser = userId;
+            const user = configData.users[userId];
+            
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            document.getElementById('targetUsername').value = userId;
+            document.getElementById('activeToggle').checked = user.active !== false;
+            
+            document.getElementById('userModal').style.display = 'block';
+        }
+        
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+        
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to delete user "${userId}"?`)) {
+                delete configData.users[userId];
+                renderUsers();
+                updateJSONPreview();
+                showStatus(`✅ User "${userId}" deleted`, 'success');
+            }
+        }
+        
+        
+        // Token management
+        function addToken(userId) {
+            editingUser = userId;
+            editingToken = null;
+            document.getElementById('tokenModalTitle').textContent = 'Add Token';
+            document.getElementById('tokenUserId').value = userId;
+            document.getElementById('tokenForm').reset();
+            document.getElementById('tokenModal').style.display = 'block';
+        }
+        
+        function editToken(userId, tokenName) {
+            editingUser = userId;
+            editingToken = tokenName;
+            const token = configData.users[userId].tokens[tokenName];
+            
+            document.getElementById('tokenModalTitle').textContent = 'Edit Token';
+            document.getElementById('tokenUserId').value = userId;
+            document.getElementById('tokenName').value = tokenName;
+            document.getElementById('tokenActive').checked = token.active !== false;
+            document.getElementById('contractAddress').value = token.contract_address || '';
+            document.getElementById('buyAmount').value = token.buy_amount || 100;
+            document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
+            document.getElementById('autosellMinutes').value = (token.autosell_minutes !== null && token.autosell_minutes !== undefined && !isNaN(token.autosell_minutes)) ? token.autosell_minutes : 0;
+            document.getElementById('keywords').value = (token.keywords || []).join(', ');
+            
+            document.getElementById('tokenModal').style.display = 'block';
+        }
+        
+        function closeTokenModal() {
+            document.getElementById('tokenModal').style.display = 'none';
+        }
+        
+        function deleteToken(userId, tokenName) {
+            if (confirm(`Are you sure you want to delete token "${tokenName}"?`)) {
+                delete configData.users[userId].tokens[tokenName];
+                renderUsers();
+                updateJSONPreview();
+                showStatus(`✅ Token "${tokenName}" deleted`, 'success');
+            }
+        }
+        
+        // Copy token functionality
+        function copyToken(userId, tokenName) {
+            const token = configData.users[userId].tokens[tokenName];
+            copyingTokenData = {
+                sourceUserId: userId,
+                tokenName: tokenName,
+                tokenData: { ...token }
+            };
+            
+            document.getElementById('copyTokenModalTitle').textContent = `Copy "${tokenName}" to Users`;
+            renderUserSelectionList();
+            document.getElementById('copyTokenModal').style.display = 'block';
+        }
+        
+        function renderUserSelectionList() {
+            const userList = document.getElementById('userSelectionList');
+            const users = Object.keys(configData.users);
+            const sourceUserId = copyingTokenData.sourceUserId;
+            
+            let html = '';
+            users.forEach(userId => {
+                if (userId !== sourceUserId) {
+                    const hasToken = configData.users[userId].tokens && configData.users[userId].tokens[copyingTokenData.tokenName];
+                    html += `
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="user_${userId}" value="${userId}">
+                                <span>${userId} ${hasToken ? '(will overwrite existing)' : ''}</span>
+                            </label>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (html === '') {
+                html = '<p style="color: #ccc; font-style: italic;">No other users available to copy to.</p>';
+            }
+            
+            userList.innerHTML = html;
+        }
+        
+        function executeCopyToken() {
+            if (!copyingTokenData) return;
+            
+            const selectedUsers = [];
+            const checkboxes = document.querySelectorAll('#userSelectionList input[type="checkbox"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedUsers.push(checkbox.value);
+            });
+            
+            if (selectedUsers.length === 0) {
+                showStatus('❌ Please select at least one user', 'error');
+                return;
+            }
+            
+            // Copy token to selected users
+            selectedUsers.forEach(userId => {
+                if (!configData.users[userId].tokens) {
+                    configData.users[userId].tokens = {};
+                }
+                configData.users[userId].tokens[copyingTokenData.tokenName] = { ...copyingTokenData.tokenData };
+            });
+            
+            closeCopyTokenModal();
+            renderUsers();
+            updateJSONPreview();
+            showStatus(`✅ Token "${copyingTokenData.tokenName}" copied to ${selectedUsers.length} user(s)`, 'success');
+        }
+        
+        function closeCopyTokenModal() {
+            document.getElementById('copyTokenModal').style.display = 'none';
+            copyingTokenData = null;
+        }
+        
+        // JSON management
+        function updateJSONPreview() {
+            if (!configData) return;
+            
+            const preview = document.getElementById('jsonPreview');
+            const phoneModeToggle = document.getElementById('phoneModeToggle');
+            const jsonContent = JSON.stringify(configData, null, 2);
+            
+            if (phoneModeToggle && phoneModeToggle.checked) {
+                preview.value = `cat > tracker_config.json << 'EOF'\n${jsonContent}\nEOF`;
+            } else {
+                preview.value = jsonContent;
+            }
+        }
+        
+        function applyJSONChanges() {
+            const preview = document.getElementById('jsonPreview');
+            let jsonText = preview.value;
+            
+            // If phone mode is enabled, extract JSON from cat command
+            const phoneModeToggle = document.getElementById('phoneModeToggle');
+            if (phoneModeToggle && phoneModeToggle.checked) {
+                // Extract JSON content between cat command and EOF
+                const match = jsonText.match(/cat > tracker_config\.json << 'EOF'\n([\s\S]*?)\nEOF/);
+                if (match) {
+                    jsonText = match[1];
+                } else {
+                    showStatus('❌ Invalid phone mode format', 'error');
+                    return;
+                }
+            }
+            
+            try {
+                const newConfigData = JSON.parse(jsonText);
+                
+                // Validate the structure
+                if (!newConfigData.users || typeof newConfigData.users !== 'object') {
+                    throw new Error('Invalid JSON structure: missing users object');
+                }
+                
+                // Update the config data
+                configData = newConfigData;
+                
+                // Refresh all UI components
+                renderUsers();
+                
+                showStatus('✅ JSON changes applied successfully!', 'success');
+                
+            } catch (error) {
+                showStatus(`❌ Error parsing JSON: ${error.message}`, 'error');
+            }
+        }
+        
+        function downloadJSON() {
+            if (!configData) {
+                showStatus('❌ No data to download', 'error');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(configData, null, 2)], { 
+                type: 'application/json' 
+            });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tracker_config.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('✅ JSON file downloaded!', 'success');
+        }
+        
+        // Form handlers
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('targetUsername').value;
+            const active = document.getElementById('activeToggle').checked;
+            
+            if (editingUser && editingUser !== username) {
+                // Rename user
+                configData.users[username] = configData.users[editingUser];
+                delete configData.users[editingUser];
+            }
+            
+            if (!configData.users[username]) {
+                configData.users[username] = {};
+            }
+            
+            configData.users[username] = {
+                ...configData.users[username],
+                active: active,
+                tokens: configData.users[username].tokens || {}
+            };
+            
+            closeUserModal();
+            renderUsers();
+            updateJSONPreview();
+            showStatus(`✅ User "${username}" saved`, 'success');
+        });
+        
+        document.getElementById('tokenForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('tokenUserId').value;
+            const tokenName = document.getElementById('tokenName').value;
+            const tokenActive = document.getElementById('tokenActive').checked;
+            const contractAddress = document.getElementById('contractAddress').value;
+            const buyAmount = parseFloat(document.getElementById('buyAmount').value);
+            const maxSlippage = parseInt(document.getElementById('maxSlippage').value);
+            const autosellMinutes = parseInt(document.getElementById('autosellMinutes').value) || 0;
+            const keywords = document.getElementById('keywords').value
+                .split(',')
+                .map(k => k.trim().toLowerCase())
+                .filter(k => k);
+            
+            if (!configData.users[userId].tokens) {
+                configData.users[userId].tokens = {};
+            }
+            
+            if (editingToken && editingToken !== tokenName) {
+                // Rename token
+                configData.users[userId].tokens[tokenName] = configData.users[userId].tokens[editingToken];
+                delete configData.users[userId].tokens[editingToken];
+            }
+            
+            // Ensure autosell_minutes is always a valid number, never null
+            if (autosellMinutes === null || autosellMinutes === undefined || isNaN(autosellMinutes) || autosellMinutes < 0) {
+                autosellMinutes = 0;
+            }
+            
+            configData.users[userId].tokens[tokenName] = {
+                active: tokenActive,
+                contract_address: contractAddress,
+                buy_amount: buyAmount,
+                max_slippage_bps: maxSlippage,
+                autosell_minutes: autosellMinutes,
+                keywords: keywords
+            };
+            
+            closeTokenModal();
+            renderUsers();
+            updateJSONPreview();
+            showStatus(`✅ Token "${tokenName}" saved`, 'success');
+        });
+        
+        // Token toggle functionality
+        function toggleTokens(userId) {
+            const tokenContent = document.getElementById(`tokens-${userId}`);
+            const tokenToggle = tokenContent.previousElementSibling.querySelector('.token-toggle');
+            
+            if (tokenContent.classList.contains('expanded')) {
+                tokenContent.classList.remove('expanded');
+                tokenToggle.classList.remove('expanded');
+            } else {
+                tokenContent.classList.add('expanded');
+                tokenToggle.classList.add('expanded');
+            }
+        }
+
+        // Drag and drop functionality for user reordering
+        let draggedCard = null;
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedCard) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (this !== draggedCard) {
+                const draggedUserId = draggedCard.dataset.userId;
+                const targetUserId = this.dataset.userId;
+
+                reorderUsers(draggedUserId, targetUserId);
+            }
+
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.classList.remove('dragging', 'drag-over');
+            });
+            draggedCard = null;
+        }
+
+        function reorderUsers(draggedUserId, targetUserId) {
+            const userKeys = Object.keys(configData.users);
+            const draggedIndex = userKeys.indexOf(draggedUserId);
+            const targetIndex = userKeys.indexOf(targetUserId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Create new ordered object
+            const newUsers = {};
+            const reorderedKeys = [...userKeys];
+
+            // Remove dragged item and insert at target position
+            reorderedKeys.splice(draggedIndex, 1);
+            reorderedKeys.splice(targetIndex, 0, draggedUserId);
+
+            // Rebuild users object in new order
+            reorderedKeys.forEach(userId => {
+                newUsers[userId] = configData.users[userId];
+            });
+
+            configData.users = newUsers;
+
+            // Re-render and update
+            renderUsers();
+            updateJSONPreview();
+            showStatus(`✅ Moved "${draggedUserId}" user`, 'success');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initDragAndDrop();
+        });
+    </script>
+</body>
+</html>
