@@ -501,6 +501,15 @@
                         <input type="text" id="tokenName" placeholder="e.g., TROLL, STARTUP" required>
                     </div>
                     <div class="form-group">
+                        <label>Chain</label>
+                        <select id="tokenChain">
+                            <option value="solana">Solana</option>
+                            <option value="bsc">Binance Smart Chain</option>
+                            <option value="ethereum">Ethereum</option>
+                            <option value="base">Base</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px;">
                             <input type="checkbox" id="tokenActive" checked>
                             <span>Active</span>
@@ -737,7 +746,7 @@
                                             </div>
                                         </h4>
                                         <div style="font-size: 12px; color: #ccc;">
-                                            <div>💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
+                                            <div>🔗 ${(token.chain || 'solana').toUpperCase()} | 💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
                                             <div>📄 ${token.contract_address?.substring(0, 20)}...</div>
                                         </div>
                                         <div class="keywords" style="margin-bottom: 5px;">
@@ -808,6 +817,7 @@
             document.getElementById('tokenModalTitle').textContent = 'Add Token';
             document.getElementById('tokenUserId').value = userId;
             document.getElementById('tokenForm').reset();
+            document.getElementById('tokenChain').value = 'solana';
             document.getElementById('tokenModal').style.display = 'block';
         }
         
@@ -821,6 +831,7 @@
             document.getElementById('tokenName').value = tokenName;
             document.getElementById('tokenActive').checked = token.active !== false;
             document.getElementById('contractAddress').value = token.contract_address || '';
+            document.getElementById('tokenChain').value = (token.chain || 'solana');
             document.getElementById('buyAmount').value = token.buy_amount || 100;
             document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
             document.getElementById('autosellMinutes').value = (token.autosell_minutes !== null && token.autosell_minutes !== undefined && !isNaN(token.autosell_minutes)) ? token.autosell_minutes : 0;
@@ -1026,10 +1037,12 @@
             const userId = document.getElementById('tokenUserId').value;
             const tokenName = document.getElementById('tokenName').value;
             const tokenActive = document.getElementById('tokenActive').checked;
-            const contractAddress = document.getElementById('contractAddress').value;
+            const contractAddress = document.getElementById('contractAddress').value.trim();
+            const tokenChain = (document.getElementById('tokenChain').value || 'solana').toLowerCase();
             const buyAmount = parseFloat(document.getElementById('buyAmount').value);
             const maxSlippage = parseInt(document.getElementById('maxSlippage').value);
-            const autosellMinutes = parseInt(document.getElementById('autosellMinutes').value) || 0;
+            let autosellMinutes = parseInt(document.getElementById('autosellMinutes').value);
+            autosellMinutes = autosellMinutes === null || isNaN(autosellMinutes) ? 0 : autosellMinutes;
             const keywords = document.getElementById('keywords').value
                 .split(',')
                 .map(k => k.trim().toLowerCase())
@@ -1046,13 +1059,14 @@
             }
             
             // Ensure autosell_minutes is always a valid number, never null
-            if (autosellMinutes === null || autosellMinutes === undefined || isNaN(autosellMinutes) || autosellMinutes < 0) {
+            if (autosellMinutes < 0) {
                 autosellMinutes = 0;
             }
             
             configData.users[userId].tokens[tokenName] = {
                 active: tokenActive,
                 contract_address: contractAddress,
+                chain: tokenChain,
                 buy_amount: buyAmount,
                 max_slippage_bps: maxSlippage,
                 autosell_minutes: autosellMinutes,
