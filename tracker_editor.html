@@ -1027,7 +1027,7 @@
             const jsonContent = JSON.stringify(configData, null, 2);
             
             if (phoneModeToggle && phoneModeToggle.checked) {
-                preview.value = `cat > tracker_config.json << 'EOF'\n${jsonContent}\nEOF`;
+                preview.value = `cd TRACKER\ncat > tracker_config.json << 'EOF'\n${jsonContent}\nEOF`;
             } else {
                 preview.value = jsonContent;
             }
@@ -1040,8 +1040,7 @@
             // If phone mode is enabled, extract JSON from cat command
             const phoneModeToggle = document.getElementById('phoneModeToggle');
             if (phoneModeToggle && phoneModeToggle.checked) {
-                // Extract JSON content between cat command and EOF
-                const match = jsonText.match(/cat > tracker_config\.json << 'EOF'\n([\s\S]*?)\nEOF/);
+                const match = jsonText.match(/cd TRACKER\ncat > tracker_config\.json << 'EOF'\n([\s\S]*?)\nEOF/);
                 if (match) {
                     jsonText = match[1];
                 } else {
