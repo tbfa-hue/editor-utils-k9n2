@@ -519,15 +519,11 @@
                     </div>
                     <div class="form-group" id="dexGroup" style="display: none;">
                         <label>DEX</label>
-                        <select id="tokenDex" onchange="updatePoolAddressRequirement()">
+                        <select id="tokenDex">
                             <!-- Options populated by updateDexOptions() -->
                         </select>
-                    </div>
-                    <div class="form-group" id="poolAddressGroup" style="display: none;">
-                        <label>Pool Address</label>
-                        <input type="text" id="poolAddress" placeholder="0x...">
                         <small style="color: #888; display: block; margin-top: 5px;">
-                            Required for direct DEX swaps. Leave empty if using 0x aggregator.
+                            Trading path will be auto-generated (e.g., USDT → WBNB → Token)
                         </small>
                     </div>
                     <div class="form-group">
@@ -939,11 +935,9 @@
             // Update DEX options based on chain
             updateDexOptions();
 
-            // Set DEX and pool address if available
+            // Set DEX if available
             if (token.dex && token.chain !== 'solana') {
                 document.getElementById('tokenDex').value = token.dex || '0x';
-                document.getElementById('poolAddress').value = token.pool_address || '';
-                updatePoolAddressRequirement();
             }
 
             document.getElementById('buyAmount').value = token.buy_amount || 100;
@@ -983,12 +977,10 @@
             const chain = document.getElementById('tokenChain').value;
             const dexGroup = document.getElementById('dexGroup');
             const dexSelect = document.getElementById('tokenDex');
-            const poolAddressGroup = document.getElementById('poolAddressGroup');
 
             // Hide DEX selection for Solana
             if (chain === 'solana') {
                 dexGroup.style.display = 'none';
-                poolAddressGroup.style.display = 'none';
                 return;
             }
 
@@ -1000,30 +992,6 @@
             dexSelect.innerHTML = options.map(opt =>
                 `<option value="${opt.value}">${opt.label}</option>`
             ).join('');
-
-            // Show/hide pool address based on DEX selection
-            updatePoolAddressRequirement();
-        }
-
-        function updatePoolAddressRequirement() {
-            const chain = document.getElementById('tokenChain').value;
-            const dex = document.getElementById('tokenDex').value;
-            const poolAddressGroup = document.getElementById('poolAddressGroup');
-
-            // Show pool address for all EVM chains
-            if (chain !== 'solana') {
-                poolAddressGroup.style.display = 'block';
-
-                // Update help text based on DEX
-                const helpText = poolAddressGroup.querySelector('small');
-                if (dex === '0x') {
-                    helpText.textContent = 'Not required when using 0x aggregator.';
-                } else {
-                    helpText.textContent = 'Required for direct DEX swaps. Find the pool address on the DEX explorer.';
-                }
-            } else {
-                poolAddressGroup.style.display = 'none';
-            }
         }
 
         function closeTokenModal() {
@@ -1238,12 +1206,10 @@
                 .map(k => k.trim().toLowerCase())
                 .filter(k => k);
 
-            // Get DEX and pool address for EVM chains
+            // Get DEX for EVM chains
             let dex = '';
-            let poolAddress = '';
             if (tokenChain !== 'solana') {
                 dex = document.getElementById('tokenDex').value || '0x';
-                poolAddress = document.getElementById('poolAddress').value.trim();
             }
 
             if (!configData.users[userId].tokens) {
@@ -1271,10 +1237,9 @@
                 keywords: keywords
             };
 
-            // Add DEX and pool_address for EVM chains
+            // Add DEX for EVM chains (path auto-generated)
             if (tokenChain !== 'solana') {
                 tokenData.dex = dex;
-                tokenData.pool_address = poolAddress;
             }
 
             configData.users[userId].tokens[tokenName] = tokenData;
