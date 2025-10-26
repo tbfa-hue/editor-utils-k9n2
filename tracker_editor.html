@@ -510,12 +510,25 @@
                     </div>
                     <div class="form-group">
                         <label>Chain</label>
-                        <select id="tokenChain">
+                        <select id="tokenChain" onchange="updateDexOptions()">
                             <option value="solana">Solana</option>
                             <option value="bsc">Binance Smart Chain</option>
                             <option value="ethereum">Ethereum</option>
                             <option value="base">Base</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="dexGroup" style="display: none;">
+                        <label>DEX</label>
+                        <select id="tokenDex" onchange="updatePoolAddressRequirement()">
+                            <!-- Options populated by updateDexOptions() -->
+                        </select>
+                    </div>
+                    <div class="form-group" id="poolAddressGroup" style="display: none;">
+                        <label>Pool Address</label>
+                        <input type="text" id="poolAddress" placeholder="0x...">
+                        <small style="color: #888; display: block; margin-top: 5px;">
+                            Required for direct DEX swaps. Leave empty if using 0x aggregator.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px;">
@@ -907,6 +920,7 @@
             document.getElementById('tokenUserId').value = userId;
             document.getElementById('tokenForm').reset();
             document.getElementById('tokenChain').value = 'solana';
+            updateDexOptions();  // Initialize DEX options
             document.getElementById('tokenModal').style.display = 'block';
         }
         
@@ -914,21 +928,104 @@
             editingUser = userId;
             editingToken = tokenName;
             const token = configData.users[userId].tokens[tokenName];
-            
+
             document.getElementById('tokenModalTitle').textContent = 'Edit Token';
             document.getElementById('tokenUserId').value = userId;
             document.getElementById('tokenName').value = tokenName;
             document.getElementById('tokenActive').checked = token.active !== false;
             document.getElementById('contractAddress').value = token.contract_address || '';
             document.getElementById('tokenChain').value = (token.chain || 'solana');
+
+            // Update DEX options based on chain
+            updateDexOptions();
+
+            // Set DEX and pool address if available
+            if (token.dex && token.chain !== 'solana') {
+                document.getElementById('tokenDex').value = token.dex || '0x';
+                document.getElementById('poolAddress').value = token.pool_address || '';
+                updatePoolAddressRequirement();
+            }
+
             document.getElementById('buyAmount').value = token.buy_amount || 100;
             document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
             document.getElementById('autosellMinutes').value = (token.autosell_minutes !== null && token.autosell_minutes !== undefined && !isNaN(token.autosell_minutes)) ? token.autosell_minutes : 0;
             document.getElementById('keywords').value = (token.keywords || []).join(', ');
-            
+
             document.getElementById('tokenModal').style.display = 'block';
         }
         
+        // DEX options per chain
+        const DEX_OPTIONS = {
+            solana: [],  // Solana doesn't need DEX selection (uses Jupiter)
+            bsc: [
+                { value: '0x', label: '0x Aggregator' },
+                { value: 'pancakeswap_v2', label: 'PancakeSwap V2' },
+                { value: 'pancakeswap_v3', label: 'PancakeSwap V3' },
+                { value: 'biswap', label: 'Biswap' },
+                { value: 'apeswap', label: 'ApeSwap' }
+            ],
+            ethereum: [
+                { value: '0x', label: '0x Aggregator' },
+                { value: 'uniswap_v2', label: 'Uniswap V2' },
+                { value: 'uniswap_v3', label: 'Uniswap V3' },
+                { value: 'sushiswap', label: 'SushiSwap' }
+            ],
+            base: [
+                { value: '0x', label: '0x Aggregator' },
+                { value: 'uniswap_v3', label: 'Uniswap V3' },
+                { value: 'aerodrome', label: 'Aerodrome' },
+                { value: 'baseswap', label: 'BaseSwap' },
+                { value: 'sushiswap', label: 'SushiSwap' }
+            ]
+        };
+
+        function updateDexOptions() {
+            const chain = document.getElementById('tokenChain').value;
+            const dexGroup = document.getElementById('dexGroup');
+            const dexSelect = document.getElementById('tokenDex');
+            const poolAddressGroup = document.getElementById('poolAddressGroup');
+
+            // Hide DEX selection for Solana
+            if (chain === 'solana') {
+                dexGroup.style.display = 'none';
+                poolAddressGroup.style.display = 'none';
+                return;
+            }
+
+            // Show DEX selection for EVM chains
+            dexGroup.style.display = 'block';
+
+            // Populate DEX options
+            const options = DEX_OPTIONS[chain] || [];
+            dexSelect.innerHTML = options.map(opt =>
+                `<option value="${opt.value}">${opt.label}</option>`
+            ).join('');
+
+            // Show/hide pool address based on DEX selection
+            updatePoolAddressRequirement();
+        }
+
+        function updatePoolAddressRequirement() {
+            const chain = document.getElementById('tokenChain').value;
+            const dex = document.getElementById('tokenDex').value;
+            const poolAddressGroup = document.getElementById('poolAddressGroup');
+
+            // Show pool address for all EVM chains
+            if (chain !== 'solana') {
+                poolAddressGroup.style.display = 'block';
+
+                // Update help text based on DEX
+                const helpText = poolAddressGroup.querySelector('small');
+                if (dex === '0x') {
+                    helpText.textContent = 'Not required when using 0x aggregator.';
+                } else {
+                    helpText.textContent = 'Required for direct DEX swaps. Find the pool address on the DEX explorer.';
+                }
+            } else {
+                poolAddressGroup.style.display = 'none';
+            }
+        }
+
         function closeTokenModal() {
             document.getElementById('tokenModal').style.display = 'none';
         }
@@ -1140,23 +1237,31 @@
                 .split(',')
                 .map(k => k.trim().toLowerCase())
                 .filter(k => k);
-            
+
+            // Get DEX and pool address for EVM chains
+            let dex = '';
+            let poolAddress = '';
+            if (tokenChain !== 'solana') {
+                dex = document.getElementById('tokenDex').value || '0x';
+                poolAddress = document.getElementById('poolAddress').value.trim();
+            }
+
             if (!configData.users[userId].tokens) {
                 configData.users[userId].tokens = {};
             }
-            
+
             if (editingToken && editingToken !== tokenName) {
                 // Rename token
                 configData.users[userId].tokens[tokenName] = configData.users[userId].tokens[editingToken];
                 delete configData.users[userId].tokens[editingToken];
             }
-            
+
             // Ensure autosell_minutes is always a valid number, never null
             if (autosellMinutes < 0) {
                 autosellMinutes = 0;
             }
-            
-            configData.users[userId].tokens[tokenName] = {
+
+            const tokenData = {
                 active: tokenActive,
                 contract_address: contractAddress,
                 chain: tokenChain,
@@ -1165,6 +1270,14 @@
                 autosell_minutes: autosellMinutes,
                 keywords: keywords
             };
+
+            // Add DEX and pool_address for EVM chains
+            if (tokenChain !== 'solana') {
+                tokenData.dex = dex;
+                tokenData.pool_address = poolAddress;
+            }
+
+            configData.users[userId].tokens[tokenName] = tokenData;
             
             closeTokenModal();
             renderUsers();
