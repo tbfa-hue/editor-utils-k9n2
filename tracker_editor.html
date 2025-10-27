@@ -519,11 +519,24 @@
                     </div>
                     <div class="form-group" id="dexGroup" style="display: none;">
                         <label>DEX</label>
-                        <select id="tokenDex">
+                        <select id="tokenDex" onchange="updateFeeTierOptions()">
                             <!-- Options populated by updateDexOptions() -->
                         </select>
                         <small style="color: #888; display: block; margin-top: 5px;">
                             Trading path will be auto-generated (e.g., USDT → WBNB → Token)
+                        </small>
+                    </div>
+                    <div class="form-group" id="feeTierGroup" style="display: none;">
+                        <label>V3 Fee Tier (Optional)</label>
+                        <select id="tokenFeeTier">
+                            <option value="">Default (Auto)</option>
+                            <option value="100">0.01% (100)</option>
+                            <option value="500">0.05% (500)</option>
+                            <option value="3000">0.3% (3000)</option>
+                            <option value="10000">1% (10000)</option>
+                        </select>
+                        <small style="color: #888; display: block; margin-top: 5px;">
+                            Only needed if default fee tier fails. Leave as "Default" for automatic selection.
                         </small>
                     </div>
                     <div class="form-group">
@@ -940,6 +953,13 @@
                 document.getElementById('tokenDex').value = token.dex || '0x';
             }
 
+            // Set fee tier if available
+            if (token.fee_tier) {
+                document.getElementById('tokenFeeTier').value = token.fee_tier;
+            } else {
+                document.getElementById('tokenFeeTier').value = '';
+            }
+
             document.getElementById('buyAmount').value = token.buy_amount || 100;
             document.getElementById('maxSlippage').value = token.max_slippage_bps || 500;
             document.getElementById('autosellMinutes').value = (token.autosell_minutes !== null && token.autosell_minutes !== undefined && !isNaN(token.autosell_minutes)) ? token.autosell_minutes : 0;
@@ -952,24 +972,16 @@
         const DEX_OPTIONS = {
             solana: [],  // Solana doesn't need DEX selection (uses Jupiter)
             bsc: [
-                { value: '0x', label: '0x Aggregator' },
                 { value: 'pancakeswap_v2', label: 'PancakeSwap V2' },
-                { value: 'pancakeswap_v3', label: 'PancakeSwap V3' },
-                { value: 'biswap', label: 'Biswap' },
-                { value: 'apeswap', label: 'ApeSwap' }
+                { value: 'pancakeswap_v3', label: 'PancakeSwap V3' }
             ],
             ethereum: [
-                { value: '0x', label: '0x Aggregator' },
                 { value: 'uniswap_v2', label: 'Uniswap V2' },
-                { value: 'uniswap_v3', label: 'Uniswap V3' },
-                { value: 'sushiswap', label: 'SushiSwap' }
+                { value: 'uniswap_v3', label: 'Uniswap V3' }
             ],
             base: [
-                { value: '0x', label: '0x Aggregator' },
                 { value: 'uniswap_v3', label: 'Uniswap V3' },
-                { value: 'aerodrome', label: 'Aerodrome' },
-                { value: 'baseswap', label: 'BaseSwap' },
-                { value: 'sushiswap', label: 'SushiSwap' }
+                { value: 'aerodrome', label: 'Aerodrome' }
             ]
         };
 
@@ -992,6 +1004,21 @@
             dexSelect.innerHTML = options.map(opt =>
                 `<option value="${opt.value}">${opt.label}</option>`
             ).join('');
+
+            // Update fee tier options visibility
+            updateFeeTierOptions();
+        }
+
+        function updateFeeTierOptions() {
+            const dex = document.getElementById('tokenDex').value;
+            const feeTierGroup = document.getElementById('feeTierGroup');
+
+            // Show fee tier selection only for V3 DEXs
+            if (dex && dex.includes('_v3')) {
+                feeTierGroup.style.display = 'block';
+            } else {
+                feeTierGroup.style.display = 'none';
+            }
         }
 
         function closeTokenModal() {
@@ -1208,8 +1235,15 @@
 
             // Get DEX for EVM chains
             let dex = '';
+            let feeTier = null;
             if (tokenChain !== 'solana') {
                 dex = document.getElementById('tokenDex').value || '0x';
+
+                // Get fee tier for V3 DEXs (only if not empty/default)
+                const feeTierValue = document.getElementById('tokenFeeTier').value;
+                if (feeTierValue && feeTierValue !== '') {
+                    feeTier = parseInt(feeTierValue);
+                }
             }
 
             if (!configData.users[userId].tokens) {
@@ -1240,6 +1274,11 @@
             // Add DEX for EVM chains (path auto-generated)
             if (tokenChain !== 'solana') {
                 tokenData.dex = dex;
+
+                // Add fee_tier for V3 DEXs if specified
+                if (feeTier !== null) {
+                    tokenData.fee_tier = feeTier;
+                }
             }
 
             configData.users[userId].tokens[tokenName] = tokenData;
