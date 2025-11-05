@@ -214,7 +214,7 @@
             align-items: center;
             margin-bottom: 10px;
             cursor: pointer;
-            padding: 8px;
+            padding: 10px;
             background: #2a2a2a;
             border-radius: 4px;
             border: 1px solid #555;
@@ -821,10 +821,10 @@
                         <div class="token-list">
                             <div class="token-header" onclick="toggleTokens('${userId}')">
                                 <strong>🪙 Tokens (${Object.keys(tokens).length})</strong>
-                                <div style="display: flex; align-items: center; gap: 5px;">
+                                <div style="display: flex; align-items: center; gap: 5px; margin-left: auto;">
                                     <button class="btn btn-small" onclick="event.stopPropagation(); addToken('${userId}')">➕</button>
                                     <button class="btn btn-small" style="opacity: 0; pointer-events: none;">🗑️</button>
-                                    <span class="token-toggle">▼</span>
+                                    <span class="token-toggle" style="margin-left: 5px;">▼</span>
                                 </div>
                             </div>
                             <div class="token-content" id="tokens-${userId}">
@@ -832,9 +832,9 @@
                                 const token = tokens[tokenName];
                                 return `
                                     <div class="token-item" style="position: relative; padding-bottom: 35px;">
-                                        <h4 style="color: ${token.active !== false ? '#4CAF50' : '#f44336'}; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <h4 style="color: ${token.active !== false ? '#4CAF50' : '#f44336'}; display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px 0;">
                                             <span>${tokenName}</span>
-                                            <div style="display: flex; gap: 5px;">
+                                            <div style="display: flex; gap: 5px; margin-left: auto;">
                                                 <button class="btn btn-small" onclick="editToken('${userId}', '${tokenName}')">✏️</button>
                                                 <button class="btn btn-small" onclick="deleteToken('${userId}', '${tokenName}')">🗑️</button>
                                             </div>
