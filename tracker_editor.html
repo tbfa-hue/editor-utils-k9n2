@@ -825,7 +825,7 @@
                 
                 html += `
                     <div class="user-card" draggable="true" data-user-id="${userId}" data-index="${index}">
-                        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="display: flex; justify-content: space-between; align-items: center; color: ${user.active !== false ? '#4CAF50' : '#f44336'};">
                             👤 ${userId}
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <button class="btn btn-small" onclick="editUser('${userId}')">✏️</button>
@@ -833,7 +833,6 @@
                             </div>
                         </h3>
                         <div class="user-detail"><strong>Username:</strong> @${userId}</div>
-                        <div class="user-detail"><strong>Active:</strong> ${user.active ? 'Yes' : 'No'}</div>
                         
                         
                         <div class="token-list">
@@ -849,7 +848,7 @@
                                 const token = tokens[tokenName];
                                 return `
                                     <div class="token-item" style="position: relative; padding-bottom: 35px;">
-                                        <h4>
+                                        <h4 style="color: ${token.active !== false ? '#4CAF50' : '#f44336'};">
                                             ${tokenName}
                                             <div style="float: right;">
                                                 <button class="btn btn-small" onclick="editToken('${userId}', '${tokenName}')">✏️</button>
@@ -857,7 +856,7 @@
                                             </div>
                                         </h4>
                                         <div style="font-size: 12px; color: #ccc;">
-                                            <div>🔗 ${(token.chain || 'solana').toUpperCase()} | 💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m | ${token.active !== false ? '🟢 Active' : '🔴 Inactive'}</div>
+                                            <div>🔗 ${(token.chain || 'solana').toUpperCase()} | 💰 ${token.buy_amount} USDC | 📈 ${token.max_slippage_bps} bps | ⏰ ${token.autosell_minutes || 0}m${token.fee_tier ? ` | 💎 ${token.fee_tier}` : ''}</div>
                                             <div>📄 ${token.contract_address?.substring(0, 20)}...</div>
                                         </div>
                                         <div class="keywords" style="margin-bottom: 5px;">
