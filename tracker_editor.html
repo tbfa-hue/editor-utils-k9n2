@@ -408,11 +408,6 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🤖 Discord Tracker Config Editor</h1>
-            <p>Edit configuration for Discord-based Twitter monitoring</p>
-        </div>
-
         <div class="upload-section" id="uploadSection">
             <p>📁 Drag & drop your tracker_config.json file here, or</p>
             <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
@@ -433,8 +428,6 @@
                 Saved configurations are stored locally in your browser.
             </p>
         </div>
-
-        <div class="status" id="status" style="display: none;"></div>
 
         <div id="mainContent" style="display: none;">
             <div class="tabs">
@@ -774,16 +767,8 @@
         
         // Show status message
         function showStatus(message, type = 'info') {
-            const status = document.getElementById('status');
-            status.className = `status ${type}`;
-            status.textContent = message;
-            status.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 3000);
-            }
+            // Status messages disabled
+            return;
         }
         
         // Tab management
@@ -836,8 +821,9 @@
                         <div class="token-list">
                             <div class="token-header" onclick="toggleTokens('${userId}')">
                                 <strong>🪙 Tokens (${Object.keys(tokens).length})</strong>
-                                <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 5px;">
                                     <button class="btn btn-small" onclick="event.stopPropagation(); addToken('${userId}')">➕</button>
+                                    <button class="btn btn-small" style="visibility: hidden;">🗑️</button>
                                     <span class="token-toggle">▼</span>
                                 </div>
                             </div>
