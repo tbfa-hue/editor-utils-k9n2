@@ -823,7 +823,7 @@
                                 <strong>🪙 Tokens (${Object.keys(tokens).length})</strong>
                                 <div style="display: flex; align-items: center; gap: 5px;">
                                     <button class="btn btn-small" onclick="event.stopPropagation(); addToken('${userId}')">➕</button>
-                                    <button class="btn btn-small" style="visibility: hidden;">🗑️</button>
+                                    <button class="btn btn-small" style="opacity: 0; pointer-events: none;">🗑️</button>
                                     <span class="token-toggle">▼</span>
                                 </div>
                             </div>
@@ -936,6 +936,9 @@
             if (token.dex && token.chain !== 'solana') {
                 document.getElementById('tokenDex').value = token.dex || '0x';
             }
+
+            // Update fee tier visibility after setting DEX
+            updateFeeTierOptions();
 
             // Set fee tier if available
             if (token.fee_tier) {
