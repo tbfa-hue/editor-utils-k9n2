@@ -1276,9 +1276,9 @@
             if (tokenChain !== 'solana') {
                 tokenData.dex = dex;
 
-                // Add fee_tier for V3 DEXs if specified
-                if (feeTier !== null) {
-                    tokenData.fee_tier = feeTier;
+                // Add fee_tier for V3 DEXs and Aerodrome (null = auto-detect)
+                if (dex && (dex.includes('_v3') || dex === 'aerodrome')) {
+                    tokenData.fee_tier = feeTier;  // Include even if null
                 }
             }
 
