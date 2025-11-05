@@ -958,14 +958,17 @@
         const DEX_OPTIONS = {
             solana: [],  // Solana doesn't need DEX selection (uses Jupiter)
             bsc: [
+                { value: '0x', label: '0x Aggregator' },
                 { value: 'pancakeswap_v2', label: 'PancakeSwap V2' },
                 { value: 'pancakeswap_v3', label: 'PancakeSwap V3' }
             ],
             ethereum: [
+                { value: '0x', label: '0x Aggregator' },
                 { value: 'uniswap_v2', label: 'Uniswap V2' },
                 { value: 'uniswap_v3', label: 'Uniswap V3' }
             ],
             base: [
+                { value: '0x', label: '0x Aggregator' },
                 { value: 'uniswap_v3', label: 'Uniswap V3' },
                 { value: 'aerodrome', label: 'Aerodrome' }
             ]
