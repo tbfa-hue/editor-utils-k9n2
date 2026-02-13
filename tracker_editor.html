@@ -958,19 +958,13 @@
         const DEX_OPTIONS = {
             solana: [],  // Solana doesn't need DEX selection (uses Jupiter)
             bsc: [
-                { value: '0x', label: '0x Aggregator' },
-                { value: 'pancakeswap_v2', label: 'PancakeSwap V2' },
-                { value: 'pancakeswap_v3', label: 'PancakeSwap V3' }
+                { value: '0x', label: '0x Aggregator' }
             ],
             ethereum: [
-                { value: '0x', label: '0x Aggregator' },
-                { value: 'uniswap_v2', label: 'Uniswap V2' },
-                { value: 'uniswap_v3', label: 'Uniswap V3' }
+                { value: '0x', label: '0x Aggregator' }
             ],
             base: [
-                { value: '0x', label: '0x Aggregator' },
-                { value: 'uniswap_v3', label: 'Uniswap V3' },
-                { value: 'aerodrome', label: 'Aerodrome' }
+                { value: '0x', label: '0x Aggregator' }
             ]
         };
 
@@ -988,7 +982,7 @@
             // Show DEX selection for EVM chains
             dexGroup.style.display = 'block';
 
-            // Populate DEX options
+            // Populate DEX options (only 0x available)
             const options = DEX_OPTIONS[chain] || [];
             dexSelect.innerHTML = options.map(opt =>
                 `<option value="${opt.value}">${opt.label}</option>`
